@@ -14,10 +14,14 @@ from OpenGL.GL.ARB.fragment_shader import *
 from OpenGL.GL.ARB.vertex_shader import *
 
 class Obj3d(object):
-  def __init__(self, display_list, ncdl, position=None, rotation=None):
+  def __init__(self, display_list, ncdl, position=None, rotation=None, scale=None):
     if position is None:
       position = [0,0,0]
     self.position = position
+
+    if scale is None:
+     scale = [1.0,1.0,1.0]
+    self.scale = scale
 
     if rotation is None:
       rotation = [0,0,0]
@@ -28,7 +32,7 @@ class Obj3d(object):
   def paint(self, noncolored=False):
     glPushMatrix()
     glTranslate(self.position[0], self.position[1], self.position[2])
-#    glScale(ViewerWidget.scale, ViewerWidget.scale, ViewerWidget.scale)
+    glScale(*self.scale)
     glRotate(float(self.rotation[0]), 1.0, 0.0, 0.0)
     glRotate(float(self.rotation[1]), 0.0, 0.0, 1.0)
     glRotate(float(self.rotation[2]), 0.0, 1.0, 0.0)
@@ -130,11 +134,12 @@ class ViewerWidget(QGLWidget):
         glClearColor(0, 0, 0, 0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
+        glShadeModel(GL_SMOOTH)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         L = 0
-        glRotate(180, 0, 0, 1)
-        glRotate(180, 0, 1, 0)
+#        glRotate(180, 0, 0, 1)
+#        glRotate(180, 0, 1, 0)
         glPushMatrix()
         glEnable(GL_MULTISAMPLE)
 
@@ -144,7 +149,7 @@ class ViewerWidget(QGLWidget):
           glTranslate(ViewerWidget.tranx, ViewerWidget.trany, ViewerWidget.tranz)
           glScale(ViewerWidget.scale, ViewerWidget.scale, ViewerWidget.scale)
           glRotate(float(ViewerWidget.roty), 1.0, 0.0, 0.0)
-          glRotate(float(ViewerWidget.rotx), 0.0, 0.0, 1.0)
+          glRotate(float(ViewerWidget.rotx), 0.0, 1.0, 0.0)
           glTranslate(-self._oc[0], -self._oc[1], -self._oc[2])
 
           if self.selected_obj == obj.obj_hash():
@@ -180,13 +185,14 @@ class ViewerWidget(QGLWidget):
     #def paintGL(self):
         glDisable(GL_LIGHTING)
         glDisable(GL_TEXTURE_2D)
+        glShadeModel(GL_FLAT)
         glClearColor(1, 1, 1, 0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        glRotate(180, 0, 0, 1)
-        glRotate(180, 0, 1, 0)
+#        glRotate(180, 0, 0, 1)
+#        glRotate(180, 0, 1, 0)
         glEnable(GL_DEPTH_TEST)
 
         glEnable(GL_MULTISAMPLE)
@@ -199,12 +205,12 @@ class ViewerWidget(QGLWidget):
           gcolor = ((intcolor & 0x00ff00) >>  8) / 255.0; 
           bcolor = ((intcolor & 0x0000ff) >>  0) / 255.0; 
           glColor3f(rcolor, gcolor, bcolor)
-          print(rcolor, gcolor, bcolor)
+          #print(rcolor, gcolor, bcolor)
           glMaterialfv(GL_FRONT,GL_DIFFUSE,[rcolor, gcolor, bcolor])
           glTranslate(ViewerWidget.tranx, ViewerWidget.trany, ViewerWidget.tranz)
           glScale(ViewerWidget.scale, ViewerWidget.scale, ViewerWidget.scale)
           glRotate(float(ViewerWidget.roty), 1.0, 0.0, 0.0)
-          glRotate(float(ViewerWidget.rotx), 0.0, 0.0, 1.0)
+          glRotate(float(ViewerWidget.rotx), 0.0, 1.0, 0.0)
           glTranslate(-self._oc[0], -self._oc[1], -self._oc[2])
 
           obj.paint(noncolored=True)
@@ -215,7 +221,7 @@ class ViewerWidget(QGLWidget):
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         
         import struct
-        print x,y
+        #print x,y
 
         data = glReadPixels(x, self.size().height()-y, 1,1, GL_RGBA, GL_UNSIGNED_BYTE)
         return struct.unpack('=BBBB', data)
@@ -273,7 +279,7 @@ class ViewerWidget(QGLWidget):
 
     def wheelEvent(self, m):
 #      ViewerWidget.scale *= (120+m.angleDelta().y()/12)/120.0
-      ViewerWidget.tranz -= m.angleDelta().y()/24.0
+      ViewerWidget.tranz += m.angleDelta().y()/24.0
       self.update()
 
     def mouseMoveEvent(self, m):
@@ -283,12 +289,12 @@ class ViewerWidget(QGLWidget):
         if (int(ViewerWidget.roty) % 360) > 0 and (int(ViewerWidget.roty) % 360) < 180:
           ViewerWidget.rotx -= (self.oldpos[0]-m.x())/10.0
         else:
-          ViewerWidget.rotx += (self.oldpos[0]-m.x())/10.0
+          ViewerWidget.rotx -= (self.oldpos[0]-m.x())/10.0
       elif button == 2:
         c = 1
         if ViewerWidget.tranz < 0:
-          c = -ViewerWidget.tranz/100.0
-        ViewerWidget.tranx -= c*(self.oldpos[0]-m.x())/4.0
+          c = ViewerWidget.tranz/100.0
+        ViewerWidget.tranx += c*(self.oldpos[0]-m.x())/4.0
         ViewerWidget.trany -= c*(self.oldpos[1]-m.y())/4.0
       self.oldpos = m.x(), m.y()
       self.update()

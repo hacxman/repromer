@@ -73,10 +73,13 @@ def main():
   m = MainW()
   m.show()
 
-  import objloader
-  o = objloader.OBJ(sys.argv[1])
-  m.gl.add_object(Obj3d(o.gl_list, o.gl_list_noncolor, position=[1,0,0], rotation=[0,0,0]))
-  m.gl.add_object(Obj3d(o.gl_list, o.gl_list_noncolor, position=[0,0,0], rotation=[45,0,0]))
+  #import objloader
+  #o = objloader.OBJ(sys.argv[1])
+  #m.gl.add_object(Obj3d(o.gl_list, o.gl_list_noncolor, position=[1,0,0], rotation=[0,0,0]))
+  #m.gl.add_object(Obj3d(o.gl_list, o.gl_list_noncolor, position=[0,0,0], rotation=[45,0,0]))
+  import sceneloader
+  objs = sceneloader.loadScene(sys.argv[1])
+  map(m.gl.add_object, objs)
 
 
   sys.exit(app.exec_())
