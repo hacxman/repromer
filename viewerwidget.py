@@ -76,7 +76,7 @@ class ViewerWidget(QGLWidget):
         self.gcodesize = 0
         self._oc = (0, 0, 0)
         self._ogc = None
-        self.selected_obj = [255,255,255,255]
+        self.selected_obj = -1
         #self.setMouseTracking(True)
 
     def quad_to_hash(self, quad):
@@ -147,7 +147,7 @@ class ViewerWidget(QGLWidget):
           glRotate(float(ViewerWidget.rotx), 0.0, 0.0, 1.0)
           glTranslate(-self._oc[0], -self._oc[1], -self._oc[2])
 
-          if self.quad_to_hash(self.selected_obj) == obj.obj_hash():
+          if self.selected_obj == obj.obj_hash():
             glColor3f(1,0.25,0.25)
             obj.paint(noncolored=True)
           else:
@@ -157,6 +157,7 @@ class ViewerWidget(QGLWidget):
 
         glPopMatrix()
         glDisable(GL_DEPTH_TEST)
+        glDisable(GL_MULTISAMPLE)
         glColor3f(0.8, 0.8, 0.8)
         self.renderText(20, 20, '{} | {} cmds'.format(
           self.filename, self.gcodesize))
@@ -267,7 +268,7 @@ class ViewerWidget(QGLWidget):
     def mousePressEvent(self, m):
       self.oldpos = m.x(), m.y()
       clr = self.paint_with_idcolor_and_get_pixels(m.x(), m.y())
-      self.selected_obj = clr
+      self.selected_obj = self.quad_to_hash(clr)
       self.update()
 
     def wheelEvent(self, m):
