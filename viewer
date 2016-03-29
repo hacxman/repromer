@@ -1,0 +1,86 @@
+#!/usr/bin/python
+#GPLv2
+
+import sys
+import os
+from OpenGL.GL import *
+from PyQt5 import QtGui, uic, QtCore, QtWidgets
+from PyQt5.QtOpenGL import *
+from viewerwidget import *
+
+class BackgroundTask(QtCore.QThread):
+  def __init__(self, fun, args):
+    QtCore.QThread.__init__(self)
+    self.fun = fun
+    self.args = args
+
+  def __del__(self):
+    self.wait()
+
+  def run(self):
+    self.fun(*self.args)
+
+class MainW(QtWidgets.QMainWindow):
+  def __init__(self):
+    QtWidgets.QMainWindow.__init__(self)
+    uic.loadUi('viewer.ui', self)
+
+#    def _cb(fname):
+#      #self.gl.loadGCode(fname)
+#      #self.gl.resetView()      
+#      import objloader
+#      o = objloader.OBJ(fname)
+#      self.gl.add_object(Obj3d(o.gl_list, position=[0,0,0], rotation=[0,0,0]))
+#
+#    BackgroundTask(_cb, [sys.argv[1]]).start()
+
+#    self.fileWatcher = QtCore.QFileSystemWatcher()
+#    self.fileWatcher.fileChanged.connect(self.on_file_changed)
+#    self.fileWatcher.addPath(sys.argv[1])
+
+  def add_object(fname):
+    pass
+
+
+  def on_file_changed(self, name):
+    print 'reload'
+    self.gl.loadGCode(name)
+
+  @QtCore.pyqtSlot()
+  def on_btnResetView_clicked(self):
+    self.gl.resetView()
+
+  @QtCore.pyqtSlot()
+  def on_btnOpenFile_clicked(self):
+    d = QtWidgets.QFileDialog(self)
+    d.setNameFilter("Wavefront obj (*.obj);;All files (*.*)")
+    d.exec_()
+    name = d.selectedFiles()[0]
+    try:
+      open(name, 'r').close()
+      import objloader
+      o = objloader.OBJ(name)
+#      self.gl.add_object(Obj3d(o.gl_list))
+      self.gl.add_object(Obj3d(o.gl_list, o.gl_list_noncolor, position=[0,0,0], rotation=[0,0,0]))
+      
+      print o
+      #self.gl.loadGCode(name)
+    except IOError:
+      pass
+
+def main():
+  app = QtWidgets.QApplication(['Viewer'])
+  m = MainW()
+  m.show()
+
+  import objloader
+  o = objloader.OBJ(sys.argv[1])
+  m.gl.add_object(Obj3d(o.gl_list, o.gl_list_noncolor, position=[1,0,0], rotation=[0,0,0]))
+  m.gl.add_object(Obj3d(o.gl_list, o.gl_list_noncolor, position=[0,0,0], rotation=[45,0,0]))
+
+
+  sys.exit(app.exec_())
+  pass
+
+if __name__ == '__main__':
+  main()
